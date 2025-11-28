@@ -1,0 +1,59 @@
+replit l need your help please merge this two data and help me create both code folder work together also l add my workflow 
+
+
+also add mongodb path to conncet its empty create database proper fo;ders also this is path for my mongodb cluster 
+
+mongosh "mongodb+srv://cluster0.0bd6yxj.mongodb.net/" --apiVersion 1 --username elvinadasite_db_user --password elvin2004
+
+mongosh "mongodb+srv://cluster0.0bd6yxj.mongodb.net/" --apiVersion 1 --username elvinadasite_db_user --password elvin2004
+
+
+
+fix my code work
+
+ 
+my workflow
+flowchart TD
+    Start[Start: File Change Detected] --> Monitor[File System Monitor]
+    
+    Monitor --> Detect[Detect Change Type]
+    Detect --> Analyze[Analyze File Integrity]
+    
+    Analyze --> Hash[Calculate File Hash]
+    Hash --> Compare[Compare with Baseline]
+    
+    Compare --> Decision{Change Type?}
+    
+    Decision -->|Modified| LogM[Log Modification]
+    Decision -->|Created| LogC[Log Creation]
+    Decision -->|Deleted| LogD[Log Deletion]
+    
+    LogM --> Store[Store Event in MongoDB]
+    LogC --> Store
+    LogD --> Store
+    
+    Store --> Alert[Generate Security Alert]
+    Alert --> Notify[Send via n8n.io]
+    Notify --> Telegram[Deliver to Telegram Bot]
+    
+    Telegram --> End[End: Security Team Alerted]
+    
+    %% Supporting Systems
+    Hash -.-> Baseline[Baseline Database]
+    Compare -.-> Baseline
+    
+    style Start fill:#4CAF50,color:#fff
+    style End fill:#F44336,color:#fff
+    style Monitor fill:#2196F3,color:#fff
+    style Detect fill:#2196F3,color:#fff
+    style Analyze fill:#2196F3,color:#fff
+    style Hash fill:#FF9800,color:#fff
+    style Compare fill:#FF9800,color:#fff
+    style Decision fill:#9C27B0,color:#fff
+    style LogM fill:#607D8B,color:#fff
+    style LogC fill:#607D8B,color:#fff
+    style LogD fill:#607D8B,color:#fff
+    style Store fill:#13A69B,color:#fff
+    style Alert fill:#E91E63,color:#fff
+    style Notify fill:#673AB7,color:#fff
+    style Telegram fill:#0088cc,color:#fff

@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Classification - FIM System{% endblock %}
+
+{% block extra_head %}
+<style>
+    .classification-badge {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        font-weight: bold;
+    }
+    .global-edit-btn, .global-save-btn {
+        display: none;
+    }
+    .global-edit-btn.show, .global-save-btn.show {
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">File Classification</h1>
+
+<!-- Filter Section -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Filters</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="/classification" id="filterForm">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="searchInput" class="form-label">Search file path:</label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="searchInput" 
+                           name="search" 
+                           placeholder="Search file path..."
+                           value="{{ search_query }}">
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Filter by endpoint:</label>
+                    <div class="row">
+                        {% if available_endpoints %}
+                            {% for endpoint in available_endpoints %}
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input endpoint-checkbox" 
+                                           type="checkbox" 
+                                           id="endpoint_{{ loop.index }}" 
+                                           name="endpoints" 
+                                           value="{{ endpoint }}"
+                                           {% if endpoint in selected_endpoints %}checked{% endif %}>
+                                    <label class="form-check-label" for="endpoint_{{ loop.index }}">
+                                        {{ endpoint }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-md-12">
+                                <p class="text-muted">No endpoints found in database.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="/classification" class="btn btn-secondary">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Classification Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">File Classifications</h5>
+        <div>
+            <button type="button" 
+                    class="btn btn-primary global-edit-btn show" 
+                    id="globalEditBtn"
+                    onclick="enableEditMode()">
+                Edit Classifications
+            </button>
+            <button type="button" 
+                    class="btn btn-success global-save-btn" 
+                    id="globalSaveBtn"
+                    onclick="saveAllClassifications()">
+                Save All Changes
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if files %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>File Path</th>
+                        <th>Last Timestamp</th>
+                        <th>Endpoint</th>
+                        <th>Hostname</th>
+                        <th>Username</th>
+                        <th>Classification</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                    <tr id="row_{{ loop.index }}">
+                        <td><code>{{ file.file_path }}</code></td>
+                        <td>{{ file.last_timestamp }}</td>
+                        <td>{{ file.endpoint }}</td>
+                        <td>{{ file.hostname }}</td>
+                        <td>{{ file.username }}</td>
+                        <td>
+                            <!-- Classification text (visible in view mode) -->
+                            <span class="classification-text" id="classification_text_{{ loop.index }}">
+                                {% if file.classification %}
+                                    {{ file.classification }}
+                                {% else %}
+                                    Unclassified
+                                {% endif %}
+                            </span>
+                            
+                            <!-- Classification dropdown (hidden in view mode, visible in edit mode) -->
+                            <select name="classification" 
+                                    id="classification_{{ loop.index }}"
+                                    class="form-select form-select-sm classification-dropdown d-none" 
+                                    style="width: auto; min-width: 150px;">
+                                <option value="" {% if not file.classification %}selected{% endif %}>-- Select --</option>
+                                <option value="Unclassified" {% if file.classification == 'Unclassified' %}selected{% endif %}>Unclassified</option>
+                                <option value="Confidential" {% if file.classification == 'Confidential' %}selected{% endif %}>Confidential</option>
+                                <option value="Secret" {% if file.classification == 'Secret' %}selected{% endif %}>Secret</option>
+                                <option value="Top Secret" {% if file.classification == 'Top Secret' %}selected{% endif %}>Top Secret</option>
+                            </select>
+                            
+                            <!-- Hidden data for saving -->
+                            <input type="hidden" id="file_path_{{ loop.index }}" value="{{ file.file_path }}">
+                            <input type="hidden" id="endpoint_{{ loop.index }}" value="{{ file.endpoint }}">
+                            <input type="hidden" id="hostname_{{ loop.index }}" value="{{ file.hostname }}">
+                            <input type="hidden" id="username_{{ loop.index }}" value="{{ file.username }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-4 text-center text-muted">
+            <p>No files found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function enableEditMode() {
+        // Hide all classification text spans
+        document.querySelectorAll('.classification-text').forEach(text => {
+            text.classList.add('d-none');
+        });
+        
+        // Show all classification dropdowns
+        document.querySelectorAll('.classification-dropdown').forEach(dropdown => {
+            dropdown.classList.remove('d-none');
+        });
+        
+        // Hide Edit button, show Save All button
+        document.getElementById('globalEditBtn').classList.remove('show');
+        document.getElementById('globalSaveBtn').classList.add('show');
+    }
+    
+    function saveAllClassifications() {
+        // Collect all file data
+        const allFiles = [];
+        const dropdowns = document.querySelectorAll('.classification-dropdown');
+        
+        dropdowns.forEach((dropdown, index) => {
+            const rowIndex = index + 1;
+            const filePath = document.getElementById('file_path_' + rowIndex).value;
+            const classification = dropdown.value || '';
+            const endpoint = document.getElementById('endpoint_' + rowIndex).value;
+            const hostname = document.getElementById('hostname_' + rowIndex).value;
+            const username = document.getElementById('username_' + rowIndex).value;
+            
+            allFiles.push({
+                file_path: filePath,
+                classification: classification,
+                endpoint: endpoint,
+                hostname: hostname,
+                username: username
+            });
+        });
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('files', JSON.stringify(allFiles));
+        
+        // Save all via AJAX
+        fetch('/classification/save-all', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update classification text and hide dropdowns, show text spans
+                document.querySelectorAll('.classification-dropdown').forEach((dropdown, index) => {
+                    const rowIndex = index + 1;
+                    const classification = dropdown.value || '';
+                    
+                    // Get the corresponding text span
+                    const textSpan = document.getElementById('classification_text_' + rowIndex);
+                    
+                    // Update text content
+                    if (classification && classification !== '') {
+                        textSpan.textContent = classification;
+                    } else {
+                        textSpan.textContent = 'Unclassified';
+                    }
+                    
+                    // Hide dropdown, show text
+                    dropdown.classList.add('d-none');
+                    textSpan.classList.remove('d-none');
+                });
+                
+                // Hide Save All button, show Edit button
+                document.getElementById('globalSaveBtn').classList.remove('show');
+                document.getElementById('globalEditBtn').classList.add('show');
+                
+                alert('All classifications saved successfully!');
+            } else {
+                alert('Error saving classifications: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving classifications. Please try again.');
+        });
+    }
+</script>
+{% endblock %}
+

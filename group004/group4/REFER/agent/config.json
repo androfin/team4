@@ -1,0 +1,7 @@
+{
+  "mongo_uri": "mongodb://fim_user:SuperSecretPass123@your-mongo-host:27017/?authSource=admin",
+  "db_name": "fim",
+  "collection_name": "events",
+  "agent_id": "WIN-FIM-01",
+  "watch_dir": "C:\\Users\\Ravan\\PycharmProjects\\REFER\\TEST"
+}
