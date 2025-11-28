@@ -1,2 +1,0 @@
-This is a test file for File Integrity Monitoring.
-Any changes to this file will be detected and logged.
